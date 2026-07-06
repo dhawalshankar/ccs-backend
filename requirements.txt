@@ -8,3 +8,4 @@ razorpay==1.4.2
 holidays==0.57
 gunicorn==22.0.0
 setuptools==75.1.0
+sqlalchemy-libsql==0.2.0

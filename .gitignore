@@ -1,0 +1,35 @@
+# --- Environment / secrets ---
+.env
+.env.*
+firebase-key.json
+
+# --- Python ---
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+
+# --- Local database ---
+*.db
+*.sqlite
+*.sqlite3
+ccs_dev.db
+
+# --- Flask ---
+instance/
+.flaskenv
+
+# --- IDE / editor ---
+.vscode/
+.idea/
+*.swp
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
