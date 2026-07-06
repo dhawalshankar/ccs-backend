@@ -17,12 +17,20 @@ class Config:
             f"sqlite+{turso_url}/?authToken={turso_token}&secure=true"
         )
 
-        # Temporary debug
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            "connect_args": {
+                "check_same_thread": False
+            }
+        }
+
+        # Temporary Debug (remove after deployment succeeds)
         print("USE_TURSO:", USE_TURSO)
         print("DB URL:", turso_url)
         print("TOKEN PRESENT:", bool(turso_token))
-        print("SQLALCHEMY_DATABASE_URI:",
-              SQLALCHEMY_DATABASE_URI.replace(turso_token, "***"))
+        print(
+            "SQLALCHEMY_DATABASE_URI:",
+            SQLALCHEMY_DATABASE_URI.replace(turso_token, "***")
+        )
 
     else:
         SQLALCHEMY_DATABASE_URI = "sqlite:///ccs_dev.db"
