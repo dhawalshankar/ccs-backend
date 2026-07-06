@@ -10,15 +10,20 @@ class Config:
     USE_TURSO = os.getenv("USE_TURSO", "false").lower() == "true"
 
     if USE_TURSO:
-        turso_url = os.getenv("TURSO_DATABASE_URL").replace("libsql://", "")
+        turso_url = os.getenv("TURSO_DATABASE_URL")
         turso_token = os.getenv("TURSO_AUTH_TOKEN")
 
         SQLALCHEMY_DATABASE_URI = (
-            f"sqlite+libsql://{turso_url}?authToken={turso_token}&secure=true"
+            f"sqlite+{turso_url}/?authToken={turso_token}&secure=true"
         )
+
+        # Temporary debug
         print("USE_TURSO:", USE_TURSO)
         print("DB URL:", turso_url)
         print("TOKEN PRESENT:", bool(turso_token))
+        print("SQLALCHEMY_DATABASE_URI:",
+              SQLALCHEMY_DATABASE_URI.replace(turso_token, "***"))
+
     else:
         SQLALCHEMY_DATABASE_URI = "sqlite:///ccs_dev.db"
 
