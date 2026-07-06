@@ -16,6 +16,9 @@ class Config:
         SQLALCHEMY_DATABASE_URI = (
             f"sqlite+libsql://{turso_url}?authToken={turso_token}&secure=true"
         )
+        print("USE_TURSO:", USE_TURSO)
+        print("DB URL:", turso_url)
+        print("TOKEN PRESENT:", bool(turso_token))
     else:
         SQLALCHEMY_DATABASE_URI = "sqlite:///ccs_dev.db"
 
