@@ -7,25 +7,10 @@ load_dotenv()
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev")
 
-    USE_TURSO = os.getenv("USE_TURSO", "false").lower() == "true"
-
-    if USE_TURSO:
-        turso_url = os.getenv("TURSO_DATABASE_URL")
-        turso_token = os.getenv("TURSO_AUTH_TOKEN")
-
-        SQLALCHEMY_DATABASE_URI = (
-            f"sqlite+{turso_url}?secure=true"
-        )
-
-        SQLALCHEMY_ENGINE_OPTIONS = {
-            "connect_args": {
-                "auth_token": turso_token,
-                "check_same_thread": False,
-            }
-        }
-
-    else:
-        SQLALCHEMY_DATABASE_URI = "sqlite:///ccs_dev.db"
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        "DATABASE_URL",
+        "sqlite:///ccs_dev.db"
+    )
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
