@@ -36,19 +36,23 @@ def create_app():
             if rule.endpoint == "static":
                 continue
 
-            routes.append({
-                "endpoint": rule.endpoint,
-                "methods": sorted(list(rule.methods - {"HEAD", "OPTIONS"})),
-                "path": rule.rule,
-            })
+            routes.append(
+                {
+                    "endpoint": rule.endpoint,
+                    "methods": sorted(list(rule.methods - {"HEAD", "OPTIONS"})),
+                    "path": rule.rule,
+                }
+            )
 
-        return jsonify({
-            "name": "Cape Comorin School Backend API",
-            "status": "Running",
-            "version": "1.0.0",
-            "database": "Turso" if Config.USE_TURSO else "SQLite",
-            "routes": routes,
-        })
+        return jsonify(
+            {
+                "name": "Cape Comorin School Backend API",
+                "status": "Running",
+                "version": "1.0.0",
+                "database": "PostgreSQL (Neon)",
+                "routes": routes,
+            }
+        )
 
     with app.app_context():
         db.create_all()
