@@ -39,6 +39,7 @@ def upload_register(file_bytes: bytes, filename: str, school_id: int = 1, sr_ser
         files=files,
         params=params,
         headers=_headers(),
+        timeout=180,
     )
     res.raise_for_status()
     return res.json()
