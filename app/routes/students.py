@@ -5,7 +5,7 @@ from app.services.vritukul_client import (
     search_students, get_student, update_student, list_students,
     delete_student, delete_students_bulk, dedupe_students,
 )
-from app.services.require_admin import require_admin
+from app.services.require_admin import require_admin, require_role
 
 students_bp = Blueprint("students", __name__, url_prefix="/api/students")
 
@@ -51,8 +51,13 @@ def list_all():
     return jsonify(body), status
 
 
+# --- Destructive actions: super_admin only ---
+# require_admin runs first (authenticates + sets request.user), then
+# require_role checks request.user["role"] before the view function runs.
+
 @students_bp.delete("/id/<int:student_id>")
 @require_admin
+@require_role("super_admin")
 def delete_one(student_id):
     body, status = _call_vritukul(delete_student, student_id)
     return jsonify(body), status
@@ -60,6 +65,7 @@ def delete_one(student_id):
 
 @students_bp.post("/delete-bulk")
 @require_admin
+@require_role("super_admin")
 def delete_bulk():
     ids = (request.get_json(silent=True) or {}).get("ids", [])
     if not ids:
@@ -70,6 +76,7 @@ def delete_bulk():
 
 @students_bp.post("/dedupe")
 @require_admin
+@require_role("super_admin")
 def dedupe():
     dry_run = request.args.get("dry_run", "true").lower() != "false"
     body, status = _call_vritukul(dedupe_students, dry_run)
