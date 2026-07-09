@@ -1,10 +1,12 @@
 # app/__init__.py
-from flask import Flask, jsonify
+from flask import Flask, app, jsonify
 from app.config import Config
 from app.extensions import db, cors
 from app.services.firebase_client import init_firebase
 from app.routes.teachers import teachers_bp
-
+# app/__init__.py — add alongside the others
+from app.routes.students import students_bp
+from app.routes.registers import registers_bp
 
 def create_app():
     app = Flask(__name__)
@@ -36,6 +38,8 @@ def create_app():
     app.register_blueprint(notices_bp)
     app.register_blueprint(fees_bp)
     app.register_blueprint(teachers_bp)
+    app.register_blueprint(students_bp)
+    app.register_blueprint(registers_bp)
 
     @app.get("/")
     def home():
