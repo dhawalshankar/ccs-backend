@@ -72,20 +72,20 @@ def update_teacher(teacher_id):
     db.session.commit()
     return jsonify(teacher.to_dict())
 
-
 @teachers_bp.delete("/<int:teacher_id>")
 @require_admin
 @require_role("super_admin")
 def delete_teacher(teacher_id):
     teacher = Teacher.query.get_or_404(teacher_id)
 
-    # also remove their login so a deleted teacher can't still authenticate
     admin_user = AdminUser.query.filter_by(teacher_id=teacher.id).first()
     if admin_user:
         try:
             fb_auth.delete_user(fb_auth.get_user_by_email(admin_user.email).uid)
-        except Exception:
-            pass  # Firebase user may already be gone; don't block DB cleanup
+        except fb_auth.UserNotFoundError:
+            pass  # already gone from Firebase, fine to continue
+        except Exception as e:
+            return jsonify({"error": f"Couldn't remove Firebase login: {e}"}), 500
         db.session.delete(admin_user)
 
     db.session.delete(teacher)

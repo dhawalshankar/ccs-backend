@@ -4,7 +4,7 @@ from app.config import Config
 from app.extensions import db, cors
 from app.services.firebase_client import init_firebase
 from app.routes.teachers import teachers_bp
-# app/__init__.py — add alongside the others
+from app.routes.auth import auth_bp 
 from app.routes.students import students_bp
 from app.routes.registers import registers_bp
 
@@ -33,14 +33,14 @@ def create_app():
 
     from app.routes.calendar import calendar_bp
     from app.routes.notices import notices_bp
-    from app.routes.fees import fees_bp
-
+   
+    app.register_blueprint(auth_bp)  
     app.register_blueprint(calendar_bp)
     app.register_blueprint(notices_bp)
-    app.register_blueprint(fees_bp)
     app.register_blueprint(teachers_bp)
     app.register_blueprint(students_bp)
     app.register_blueprint(registers_bp)
+    
 
     @app.get("/")
     def home():
