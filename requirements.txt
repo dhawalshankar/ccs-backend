@@ -8,6 +8,6 @@ razorpay==1.4.2
 holidays==0.57
 gunicorn==22.0.0
 setuptools==75.1.0
-
+firebase-admin==6.5.0
 SQLAlchemy==2.0.35
 psycopg2-binary==2.9.10
