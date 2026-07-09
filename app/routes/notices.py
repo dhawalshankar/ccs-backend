@@ -1,5 +1,5 @@
 # app/routes/notices.py
-from flask import Blueprint, request, jsonify, Response
+from flask import Blueprint, request, jsonify, Response, current_app
 from app.extensions import db
 from app.models.notice import Notice
 from app.services.docx_convert import convert_docx_to_pdf
@@ -38,8 +38,12 @@ def upload_notice():
 @notices_bp.get("/<int:notice_id>/download")
 def download_notice(notice_id):
     notice = Notice.query.get_or_404(notice_id)
-    resp = requests.get(notice.file_url)
-    resp.raise_for_status()
+    try:
+        resp = requests.get(notice.file_url, timeout=10)
+        resp.raise_for_status()
+    except requests.RequestException as e:
+        current_app.logger.error(f"Failed to fetch notice {notice_id} from Cloudinary: {e}")
+        return jsonify({"error": "Could not retrieve file"}), 502
     return Response(
         resp.content,
         mimetype="application/pdf",
