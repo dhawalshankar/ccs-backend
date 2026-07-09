@@ -2,3 +2,4 @@
 from app.models.calendar_event import CalendarEvent
 from app.models.notice import Notice
 from app.models.fee_transaction import FeeTransaction
+from app.models.teacher import Teacher
