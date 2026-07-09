@@ -22,3 +22,6 @@ class Config:
 
     RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
     RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+
+    VRITUKUL_BASE_URL = os.getenv("VRITUKUL_BASE_URL")
+    VRITUKUL_SERVICE_KEY = os.getenv("VRITUKUL_SERVICE_KEY")
