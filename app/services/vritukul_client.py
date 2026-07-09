@@ -5,6 +5,13 @@ from flask import current_app
 def _headers():
     return {"X-Service-Key": current_app.config["VRITUKUL_SERVICE_KEY"]}
 
+
+def list_students():
+    base = current_app.config["VRITUKUL_BASE_URL"]
+    res = requests.get(f"{base}/api/students/list", headers=_headers())
+    res.raise_for_status()
+    return res.json()
+
 def search_students(query: str):
     base = current_app.config["VRITUKUL_BASE_URL"]
     res = requests.get(f"{base}/api/students/search", params={"q": query}, headers=_headers())
