@@ -1,7 +1,10 @@
 # app/routes/students.py
 from flask import Blueprint, request, jsonify
 import requests
-from app.services.vritukul_client import search_students, get_student, update_student, list_students
+from app.services.vritukul_client import (
+    search_students, get_student, update_student, list_students,
+    delete_student, delete_students_bulk, dedupe_students,
+)
 from app.services.require_admin import require_admin
 
 students_bp = Blueprint("students", __name__, url_prefix="/api/students")
@@ -45,4 +48,29 @@ def edit(sr_number):
 @require_admin
 def list_all():
     body, status = _call_vritukul(list_students)
+    return jsonify(body), status
+
+
+@students_bp.delete("/id/<int:student_id>")
+@require_admin
+def delete_one(student_id):
+    body, status = _call_vritukul(delete_student, student_id)
+    return jsonify(body), status
+
+
+@students_bp.post("/delete-bulk")
+@require_admin
+def delete_bulk():
+    ids = (request.get_json(silent=True) or {}).get("ids", [])
+    if not ids:
+        return jsonify({"error": "No ids provided"}), 400
+    body, status = _call_vritukul(delete_students_bulk, ids)
+    return jsonify(body), status
+
+
+@students_bp.post("/dedupe")
+@require_admin
+def dedupe():
+    dry_run = request.args.get("dry_run", "true").lower() != "false"
+    body, status = _call_vritukul(dedupe_students, dry_run)
     return jsonify(body), status
