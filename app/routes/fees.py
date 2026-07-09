@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify, current_app
 from app.extensions import db
 from app.models.fee_transaction import FeeTransaction
 from app.services.razorpay_client import create_order, verify_payment_signature
+from app.services.require_admin import require_admin, require_role
 
 fees_bp = Blueprint("fees", __name__, url_prefix="/api/fees")
 
@@ -53,6 +54,8 @@ def verify_fee_payment():
         return jsonify({"status": "failed"}), 400
 
 @fees_bp.get("")
+@require_admin
+@require_role("super_admin")
 def list_transactions():
     txns = FeeTransaction.query.order_by(FeeTransaction.created_at.desc()).all()
     return jsonify([t.to_dict() for t in txns])
