@@ -1,11 +1,12 @@
 # app/routes/students.py
 from flask import Blueprint, request, jsonify
 import requests
+from app.services.require_admin import require_admin, require_role
 from app.services.vritukul_client import (
     search_students, get_student, update_student, list_students,
     delete_student, delete_students_bulk, dedupe_students,
+    create_student,
 )
-from app.services.require_admin import require_admin, require_role
 
 students_bp = Blueprint("students", __name__, url_prefix="/api/students")
 
@@ -54,7 +55,6 @@ def list_all():
 # --- Destructive actions: super_admin only ---
 # require_admin runs first (authenticates + sets request.user), then
 # require_role checks request.user["role"] before the view function runs.
-
 @students_bp.delete("/id/<int:student_id>")
 @require_admin
 @require_role("super_admin")
@@ -80,4 +80,16 @@ def delete_bulk():
 def dedupe():
     dry_run = request.args.get("dry_run", "true").lower() != "false"
     body, status = _call_vritukul(dedupe_students, dry_run)
+    return jsonify(body), status
+
+
+@students_bp.post("/create")
+@require_admin
+def create():
+    data = request.get_json(silent=True) or {}
+    if not data.get("student_name"):
+        return jsonify({"error": "student_name is required"}), 400
+    if data.get("sr_series") not in ("old", "new"):
+        return jsonify({"error": "sr_series must be 'old' or 'new'"}), 400
+    body, status = _call_vritukul(create_student, data)
     return jsonify(body), status
