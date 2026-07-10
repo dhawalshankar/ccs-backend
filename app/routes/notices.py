@@ -72,10 +72,26 @@ def generate_draft():
     prompt = data.get("prompt", "")
 
     primary, nearby = find_primary_and_nearby(prompt)
+
     if not primary:
-        return jsonify({"error": "Couldn't match any upcoming calendar event. Please add it to the calendar first or rephrase."}), 400
+        # No calendar match — fall back to a manual, one-off notice
+        return jsonify({
+            "calendar_matched": False,
+            "primary_event": None,
+            "fields": {
+                "school_name": {"value": "Cape Comorin School", "missing": False},
+                "principal_name": {"value": "Mrs. Chitranshi Shukla", "missing": False},
+                "event_title": {"value": "", "missing": True},
+                "date": {"value": "", "missing": True},
+                "timing": {"value": "", "missing": True},
+                "venue": {"value": "", "missing": True},
+                "classes": {"value": "", "missing": True},
+            },
+            "nearby_events": [],
+        })
 
     return jsonify({
+        "calendar_matched": True,
         "primary_event": {"title": primary.title, "type": primary.type, "date": primary.start_date.isoformat()},
         "fields": {
             "school_name": {"value": "Cape Comorin School", "missing": False},
@@ -93,13 +109,17 @@ def generate_draft():
 @notices_bp.post("/generate-draft/confirm")
 def confirm_draft():
     data = request.get_json()
-    primary_event = data["primary_event"]
+    primary_event = data.get("primary_event")  # can be None for one-off notices
+    event_title = data.get("event_title")
+    date = data.get("date")
     timing = data.get("timing")
     venue = data.get("venue")
     classes = data.get("classes")
     include_events = data.get("include_events", [])
 
-    draft_text = generate_notice_draft(primary_event, timing, venue, classes, include_events)
+    draft_text = generate_notice_draft(
+        primary_event, timing, venue, classes, include_events, event_title, date
+    )
     return jsonify({"draft_text": draft_text})
 
 

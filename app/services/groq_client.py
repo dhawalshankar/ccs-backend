@@ -6,7 +6,18 @@ client = Groq(api_key=os.environ["GROQ_API_KEY"])
 MODEL = "llama-3.3-70b-versatile"
 
 SYSTEM_PROMPT = """You are writing a formal but warm school notice for Cape Comorin School.
-Rules:
+
+CRITICAL RULE — FOLLOW EXACTLY:
+- Use ONLY the exact event title and date given to you in the user message below.
+- NEVER substitute, "correct", or replace the given title/date with a different,
+  more well-known real-world event or holiday — even if the given title sounds
+  unusual or the date reminds you of a famous occasion (e.g. if given "Rainy Day"
+  on 15 July, write about "Rainy Day" on 15 July — do NOT write about Independence
+  Day just because 15 August is a well-known holiday).
+- If the title given is generic or unclear, still write the notice about exactly
+  that title, in your own words, without inventing a different subject.
+
+Other rules:
 - Do NOT start with "Dear Parents," — that greeting is already added separately by the template. Start directly with the first sentence of the notice.
 - Tone: warm, respectful, appealing to guardians — never cold or robotic.
 - Keep the notice focused ONLY on the primary event given. Do not mention any
@@ -18,16 +29,30 @@ Rules:
   principal's name, that is added separately by the template.
 - Output ONLY the notice body text. No headers, no markdown title, no signature."""
 
-def generate_notice_draft(primary_event, timing, venue, classes, include_events=None):
+
+def generate_notice_draft(primary_event, timing, venue, classes, include_events=None, event_title=None, date=None):
     include_events = include_events or []
 
-    context = f"""
+    if primary_event:
+        context = f"""
 Primary event: {primary_event['title']} ({primary_event['type']})
 Date: {primary_event['date']}
 Timing: {timing or 'not specified'}
 Venue: {venue or 'not specified'}
 Applicable classes: {classes or 'All Classes'}
 """
+    else:
+        context = f"""
+This is a one-off notice not tied to any calendar event.
+The exact subject of this notice is: "{event_title}"
+The exact date is: {date}
+Do not write about any other subject or date — use only what is given above.
+
+Timing: {timing or 'not specified'}
+Venue: {venue or 'not specified'}
+Applicable classes: {classes or 'All Classes'}
+"""
+
     if include_events:
         context += "\nAlso include a brief mention of these nearby events:\n"
         for ev in include_events:
