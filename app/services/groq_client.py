@@ -7,7 +7,7 @@ MODEL = "llama-3.3-70b-versatile"
 
 SYSTEM_PROMPT = """You are writing a formal but warm school notice for Cape Comorin School.
 Rules:
-- Address as "Dear Parents,"
+- Do NOT start with "Dear Parents," — that greeting is already added separately by the template. Start directly with the first sentence of the notice.
 - Tone: warm, respectful, appealing to guardians — never cold or robotic.
 - Keep the notice focused ONLY on the primary event given. Do not mention any
   other event unless explicitly told to include it.
@@ -16,8 +16,7 @@ Rules:
 - Bold key facts (date, day, timing, venue) using **double asterisks**.
 - End the body text before the closing — do NOT write "Regards" or the
   principal's name, that is added separately by the template.
-- Output ONLY the notice body text. No headers, no markdown title, no signature.
-"""
+- Output ONLY the notice body text. No headers, no markdown title, no signature."""
 
 def generate_notice_draft(primary_event, timing, venue, classes, include_events=None):
     include_events = include_events or []

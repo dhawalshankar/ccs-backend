@@ -1,10 +1,14 @@
-# app/services/notice_renderer.py
+import os
+import re
 from datetime import datetime
 from weasyprint import HTML
 
 SCHOOL_NAME = "Cape Comorin School"
-PRINCIPAL_NAME = "Mrs. Chitranshi Shukla"
-LOGO_PATH = "app/static/logo.png"
+SIGNATURE_NAME = "Chitranshi Shukla"           # cursive signature — no title
+PRINCIPAL_NAME = "Mrs. Chitranshi Shukla"      # printed name below — with title
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # -> app/
+LOGO_PATH = "static/logo.png"  # relative to BASE_DIR, resolved via base_url
 
 TEMPLATE = """
 <html>
@@ -39,7 +43,7 @@ TEMPLATE = """
   <div class="body">Dear Parents,<br/><br/>{body}</div>
   <div class="signature">
     Regards,<br/>
-    <div class="sig">{principal_name}</div>
+    <div class="sig">{signature_name}</div>
     <div class="name">{principal_name}</div>
     Principal
   </div>
@@ -48,13 +52,30 @@ TEMPLATE = """
 </html>
 """
 
+def markdown_bold_to_html(text: str) -> str:
+    """Convert **bold** markdown into <strong> tags."""
+    return re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
+
+def strip_leading_greeting(text: str) -> str:
+    """Remove a leading 'Dear Parents,' line from Groq's output,
+    since the template already adds its own greeting."""
+    return re.sub(r"^\s*Dear Parents,?\s*\n*", "", text, flags=re.IGNORECASE)
+
+full_logo_path = os.path.join(BASE_DIR, LOGO_PATH)
+print(f"DEBUG: Looking for logo at: {full_logo_path}, exists: {os.path.exists(full_logo_path)}")
+
 def render_notice_pdf(body_text: str, classes: str) -> bytes:
+    cleaned = strip_leading_greeting(body_text)
+    cleaned = markdown_bold_to_html(cleaned)
+    cleaned = cleaned.replace("\n", "<br/>")
+
     html_str = TEMPLATE.format(
         logo_path=LOGO_PATH,
         school_name=SCHOOL_NAME,
         date=datetime.utcnow().strftime("%d %b, %Y"),
         classes=classes or "All Classes",
-        body=body_text.replace("\n", "<br/>"),
+        body=cleaned,
+        signature_name=SIGNATURE_NAME,
         principal_name=PRINCIPAL_NAME,
     )
-    return HTML(string=html_str).write_pdf()
+    return HTML(string=html_str, base_url=BASE_DIR).write_pdf()
