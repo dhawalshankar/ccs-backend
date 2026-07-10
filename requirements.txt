@@ -11,3 +11,5 @@ setuptools==75.1.0
 firebase-admin==6.5.0
 SQLAlchemy==2.0.35
 psycopg2-binary==2.9.10
+groq==0.11.0
+weasyprint==62.3

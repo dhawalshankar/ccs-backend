@@ -1,18 +1,22 @@
-# app/routes/notices.py
 from flask import Blueprint, request, jsonify, Response, current_app
 from app.extensions import db
 from app.models.notice import Notice
 from app.services.docx_convert import convert_docx_to_pdf
 from app.services.cloudinary_client import upload_pdf
+from app.services.calendar_matcher import find_primary_and_nearby
+from app.services.groq_client import generate_notice_draft
+from app.services.notice_renderer import render_notice_pdf
 import uuid
 import requests
 
 notices_bp = Blueprint("notices", __name__, url_prefix="/api/notices")
 
+
 @notices_bp.get("")
 def list_notices():
     notices = Notice.query.filter_by(published=True).order_by(Notice.uploaded_at.desc()).all()
     return jsonify([n.to_dict() for n in notices])
+
 
 @notices_bp.post("")
 def upload_notice():
@@ -35,6 +39,7 @@ def upload_notice():
     db.session.commit()
     return jsonify(notice.to_dict()), 201
 
+
 @notices_bp.get("/<int:notice_id>/download")
 def download_notice(notice_id):
     notice = Notice.query.get_or_404(notice_id)
@@ -50,9 +55,68 @@ def download_notice(notice_id):
         headers={"Content-Disposition": f'inline; filename="{notice.title}.pdf"'}
     )
 
+
 @notices_bp.delete("/<int:notice_id>")
 def delete_notice(notice_id):
     notice = Notice.query.get_or_404(notice_id)
     db.session.delete(notice)
     db.session.commit()
     return "", 204
+
+
+# ---------- Generate Notice (Groq + calendar) ----------
+
+@notices_bp.post("/generate-draft")
+def generate_draft():
+    data = request.get_json()
+    prompt = data.get("prompt", "")
+
+    primary, nearby = find_primary_and_nearby(prompt)
+    if not primary:
+        return jsonify({"error": "Couldn't match any upcoming calendar event. Please add it to the calendar first or rephrase."}), 400
+
+    return jsonify({
+        "primary_event": {"title": primary.title, "type": primary.type, "date": primary.start_date.isoformat()},
+        "fields": {
+            "school_name": {"value": "Cape Comorin School", "missing": False},
+            "principal_name": {"value": "Mrs. Chitranshi Shukla", "missing": False},
+            "event_title": {"value": primary.title, "missing": False},
+            "date": {"value": primary.start_date.isoformat(), "missing": False},
+            "timing": {"value": "", "missing": True},
+            "venue": {"value": "", "missing": True},
+            "classes": {"value": "", "missing": True},
+        },
+        "nearby_events": [{"title": e.title, "date": e.start_date.isoformat(), "include": False} for e in nearby],
+    })
+
+
+@notices_bp.post("/generate-draft/confirm")
+def confirm_draft():
+    data = request.get_json()
+    primary_event = data["primary_event"]
+    timing = data.get("timing")
+    venue = data.get("venue")
+    classes = data.get("classes")
+    include_events = data.get("include_events", [])
+
+    draft_text = generate_notice_draft(primary_event, timing, venue, classes, include_events)
+    return jsonify({"draft_text": draft_text})
+
+
+@notices_bp.post("/finalize")
+def finalize_notice():
+    data = request.get_json()
+    final_text = data["final_text"]
+    classes = data.get("classes")
+    event_title = data.get("event_title", "Notice")
+
+    pdf_bytes = render_notice_pdf(final_text, classes)
+
+    public_id = f"notice-{uuid.uuid4().hex[:10]}"
+    file_url = upload_pdf(pdf_bytes, public_id)
+
+    notice = Notice(title=event_title, file_url=file_url, original_filename=f"{event_title}.pdf")
+    db.session.add(notice)
+    db.session.commit()
+
+    return jsonify(notice.to_dict()), 201
