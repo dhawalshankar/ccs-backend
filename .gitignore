@@ -13,7 +13,7 @@ __pycache__/
 .eggs/
 .env
 .env.*
-
+service-key.json
 # --- Local database ---
 *.db
 *.sqlite
