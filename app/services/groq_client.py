@@ -7,7 +7,7 @@ from groq import Groq
 logger = logging.getLogger(__name__)
 
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
-MODEL = "llama-3.3-70b-versatile"
+MODEL = "openai/gpt-oss-20b"
 
 SYSTEM_PROMPT = """You are writing a formal school notice for Cape Comorin School, in the standard
 style Indian schools use — matter-of-fact, respectful, and professional.
