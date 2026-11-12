@@ -18,6 +18,12 @@ Vritukul (external service, deployed separately)
 
 **Key principle:** Vritukul stays completely untouched by this repo. Its footprint here is two env vars (`VRITUKUL_BASE_URL`, `VRITUKUL_SERVICE_KEY`) and a single client file, `app/services/vritukul_client.py`. Nothing else in this codebase needs to know it exists — `routes/students.py` and `routes/registers.py` just call into that client and translate its responses/errors into this API's JSON shape.
 
+This makes `ccs-backend` the orchestration layer for the school ecosystem:
+the frontend authenticates against this service, this service owns CCS business
+data, and records-related requests are forwarded to the independently deployed
+Vritukul API with a server-side service key. The frontend never receives or
+uses the Vritukul credential.
+
 ---
 
 ## Tech Stack
@@ -150,6 +156,10 @@ Most write/admin endpoints are protected by decorators in `services/require_admi
 - `@require_admin` — verifies a Firebase ID token and attaches the user to `request.user` (`email`, `role`, `teacher_id`).
 - `@require_role("super_admin")` — stacked after `@require_admin`; restricts an endpoint to a specific role.
 
+Vritukul's internal API uses its own `X-Service-Key` contract. The proxy client
+adds that credential server-side, so browser clients should call only the CCS
+backend routes.
+
 ---
 
 ## Routes Overview
@@ -163,6 +173,16 @@ Most write/admin endpoints are protected by decorators in `services/require_admi
 | Notices | `/api/notices` | Upload (PDF/DOCX → auto-converted to PDF), AI-assisted drafting, publish, delete |
 | Calendar | `/api/calendar` | CRUD; national holidays auto-seeded, school events manual |
 | Fees | `/api/fees` | Razorpay order create/verify — **defined but not currently registered**, see note below |
+
+## Service boundaries
+
+| Responsibility | Owning service |
+|---|---|
+| Public/admin web application | `capecomorinschool` frontend |
+| CCS teachers, notices, calendar, fees, and proxy API | `ccs-backend` |
+| Student records and AI register extraction | Vritukul |
+| School operational relational data | Neon Postgres |
+| Register PDF archival | Vritukul's Cloudinary integration |
 
 ## API Reference
 
