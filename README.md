@@ -105,7 +105,7 @@ ccs-backend/
 ### Setup
 
 ```bash
-git clone <repo-url> ccs-backend
+git clone https://github.com/dhawalshankar/ccs-backend.git
 cd ccs-backend
 python -m venv venv
 source venv/bin/activate      # Windows: venv\Scripts\activate
